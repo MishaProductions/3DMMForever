@@ -19,7 +19,9 @@
 #include "studio.h"
 #include "socres.h"
 #include "mminstal.h"
-
+#pragma comment(                                                                                                       \
+    linker,                                                                                                            \
+    "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 ASSERTNAME
 
 // If the following value is defined, 3DMM displays the dlidDesktopResizing
@@ -68,6 +70,8 @@ ON_CID_GEN(cidInvokeSplot, &APP::FCmdInvokeSplot, pvNil)
 ON_CID_GEN(cidExitStudio, &APP::FCmdExitStudio, pvNil)
 ON_CID_GEN(cidDeactivate, &APP::FCmdDeactivate, pvNil)
 END_CMD_MAP_NIL()
+
+#include <commctrl.h>
 
 APP vapp;
 PTAGM vptagm;
@@ -315,8 +319,8 @@ bool APP::_FInit(ulong grfapp, ulong grfgob, long ginDef)
         goto LFail;
     }
 
-    while (TsCurrent() - tsHomeLogo < kdtsHomeLogo)
-        ; // spin until home logo has been up long enough
+    //while (TsCurrent() - tsHomeLogo < kdtsHomeLogo)
+    //    ; // spin until home logo has been up long enough
 
     if (!_FShowSplashScreen())
     {
@@ -326,12 +330,12 @@ bool APP::_FInit(ulong grfapp, ulong grfgob, long ginDef)
     }
     tsSplashScreen = TsCurrent();
 
-    if (!_FPlaySplashSound())
+   /* if (!_FPlaySplashSound())
     {
         _FGenericError(PszLit("_FPlaySplashSound"));
         _fDontReportInitFailure = fTrue;
         goto LFail;
-    }
+    }*/
 
     if (!_FGetUserName())
     {
@@ -788,7 +792,8 @@ bool APP::_FEnsureDisplayResolution(void)
     bool fSwitchRes;
     bool fNoValue;
     long tsResize;
-
+    _fRunInWindow = fTrue;
+    return fTrue;
     if (_FDisplayIs640480())
     {
         // System is already 640x480, so ignore registry and run fullscreen
@@ -933,6 +938,12 @@ bool APP::_FInitOS(void)
 
     if (!FGetStnApp(idsWindowTitle, &stnWindowTitle))
         return fFalse;
+
+    INITCOMMONCONTROLSEX InitCtrlEx;
+    InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitCtrlEx.dwICC = ICC_TAB_CLASSES | ICC_TREEVIEW_CLASSES;
+    int hr = InitCommonControlsEx(&InitCtrlEx);
+
 
     // register the window classes
     if (vwig.hinstPrev == hNil)
@@ -3482,6 +3493,9 @@ bool APP::_FSwitch640480(bool fTo640480)
     PFNCHDS pfnChds;
     DEVMODE devmode;
     long lwResult;
+
+
+    return fFalse;
 
     hLibrary = LoadLibrary(PszLit("USER32.DLL"));
     if (0 == hLibrary)
